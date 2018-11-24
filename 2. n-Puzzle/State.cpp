@@ -17,6 +17,13 @@ pair<pii,string> moves[4] = {
                                 make_pair( make_pair(-1, 0), string("DOWN") )
                             };
 
+pii getGoalPosition(int a,int n){
+    if(a == 0)
+        return make_pair(n-1,n-1);
+
+    return make_pair((a-1)/n,(a-1)%n);
+}
+
 struct State{
     matrix a;
     int n;
@@ -60,13 +67,13 @@ struct State{
         //updates the new position of zero
         ret.zero = make_pair(new_i,new_j);
 
+
+        //builds path
         char ch[100];
         sprintf(ch,"move %d ",ret.a[prev_i][prev_j]);
-
         ret.path = this->path + "\nState  :\n" + toString()
                               +   "Action : "   + string(ch) + moveName + "\n\n";
 
-        //cout << ret.a[prev_i][prev_j] << " " << moveName << endl;
 
         return ret;
     }
@@ -94,7 +101,7 @@ struct State{
             for(int j = 0;j < n;j++)
                 if(a[i][j]) arr.push_back(a[i][j]);
 
-        for(int i = 0;i < arr.size() - 1;i++){
+        for(int i = 0;i < (int)arr.size() - 1;i++){
             for(int j = i + 1;j < arr.size();j++){
                 if(arr[i] > arr [j]){
                     inversions++;
@@ -103,7 +110,7 @@ struct State{
             }
         }
 
-        printf("blank row %d\ninversions %d\n",blank_row,inversions);
+        //printf("blank row %d\ninversions %d\n",blank_row,inversions);
 
         if(n % 2 == 1){
             //number of inversions must be EVEN to be solvable
@@ -130,6 +137,98 @@ struct State{
                     return false;
 
         return true;
+    }
+
+    int hamming(){
+        int hamm = 0;
+        for(int i = 0;i < n;i++){
+            for(int j = 0;j < n;j++){
+                if(a[i][j]){
+                    pii current = make_pair(i,j);
+                    pii goal    = getGoalPosition(a[i][j],n);
+
+                    //cout << a[i][j] << " " << (current != goal) << endl;
+
+                    hamm = hamm + (int) (current != goal);
+                }
+            }
+        }
+        return hamm;
+    }
+
+    int manhattan(){
+        int manh = 0;
+        for(int i = 0;i < n;i++){
+            for(int j = 0;j < n;j++){
+                if(a[i][j]){
+                    pii current = make_pair(i,j);
+                    pii goal    = getGoalPosition(a[i][j],n);
+
+                    manh = manh + abs(current.first  - goal.first)
+                                + abs(current.second - goal.second);
+
+                    //cout << a[i][j] << " " << (abs(current.first  - goal.first)
+                    //            + abs(current.second - goal.second)) << endl;
+                }
+            }
+        }
+        return manh;
+    }
+
+    int linearConflict(){
+
+        int conflict = 0;
+
+        //row line
+        vector<int> b;
+        for(int i = 0;i < n;i++){
+            b.clear();
+            for(int j = 0;j < n;j++){
+                pii pos = getGoalPosition(a[i][j],n);
+                if( a[i][j] && (i == pos.first) ){
+                    b.push_back(a[i][j]);
+                }
+            }
+
+            //a row line is in b
+            for(int k = 0;k < (int)b.size() - 1;k++){
+                for(int l = k + 1;l < b.size();l++){
+
+                    if(b[k] > b [l]){//linear conflict
+                        //printf("(%d,%d)\n",b[k],b[l]);
+                        conflict++;
+                    }
+
+                }
+            }
+        }
+
+
+        //column line
+        for(int j = 0;j < n;j++){
+            b.clear();
+            for(int i = 0;i < n;i++){
+                pii pos = getGoalPosition(a[i][j],n);
+                if( a[i][j] && (j == pos.second) ){
+                    b.push_back(a[i][j]);
+                }
+            }
+            //a line is in b
+            for(int k = 0;k < (int)b.size() - 1;k++){
+
+                for(int l = k + 1;l < b.size();l++){
+
+                    if(b[k] > b [l]){//linear conflict
+                        //printf("(%d,%d)\n",b[k],b[l]);
+                        conflict++;
+                    }
+
+                }
+
+            }
+        }
+
+        return manhattan() + 2*conflict;
     }
 
 };
@@ -165,7 +264,6 @@ State getGoal(int n){
     return goal;
 }
 
-/*
 int main(){
     freopen("in.txt","r",stdin);
 
@@ -186,32 +284,11 @@ int main(){
     }
 
     State start(a,zero);
-    /*cout << start << endl;
 
-    start = start.move(moves[LEFT].first,moves[LEFT].second);
-    cout << start << endl;
+    cout << "hamming   = " << start.hamming() << endl;
+    cout << "manhattan = " << start.manhattan() << endl;
+    cout << "linearConflict = " << start.linearConflict() << endl;
 
-    start = start.move(moves[UP].first,moves[UP].second);
-    cout << start << endl;
-
-    start = start.move(moves[LEFT].first,moves[LEFT].second);
-    cout << start << endl;
-
-    start = start.move(moves[UP].first,moves[UP].second);
-    cout << start << endl;
-
-
-    cout << "toString() -> " << endl << start.toString() << endl;
-    /*cout << "left " << boolalpha << start.canMove(moves[LEFT].first) << endl;
-    cout << "right " << boolalpha << start.canMove(moves[RIGHT].first) << endl;
-    cout << "up " << boolalpha << start.canMove(moves[UP].first) << endl;
-    cout << "down " << boolalpha << start.canMove(moves[DOWN].first) << endl;*/
-    /*State next = start.move(moves[UP].first,moves[UP].second);
-    cout << start << endl << next;
-    cout << boolalpha << (next < start);
-
-    //State goal = getGoal(4);
-    //cout << goal << endl;
     return 0;
 }
-*/
+
