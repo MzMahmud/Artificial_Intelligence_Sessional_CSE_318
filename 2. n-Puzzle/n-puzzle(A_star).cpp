@@ -1,58 +1,39 @@
 #include <bits/stdc++.h>
-#define TIMEOUT 30
-#define MAXEXPLORED 1000000
 
 using namespace std;
 
 #include "State.cpp"
 
-int expandedBFS = 1,exploredBFS;
-double timeBFS;
+bool A_star(State start,State goal,int heuristic){
 
-bool bfs(State start,State goal){
-    queue<State> q;
-    map<State,bool> visited;
+    priority_queue<State,vector<State>,StateComparator>  pq;//Open List
+    map<State,bool> visited;//Close List
 
-    q.push(start);
+    pq.push(start);
 
-    clock_t startTime = clock();
-
-    expandedBFS = 0,exploredBFS = 1;
-    while(!q.empty()){
-        State u = q.front();q.pop();
+    while(!pq.empty()){
+        State u = pq.top();pq.pop();
 		visited[u] = true;
-
-        expandedBFS++;
-        //cout << ">> " << u << endl;
-
-        clock_t endTime = clock();
-        double timePassed = (double)(endTime - startTime)/CLOCKS_PER_SEC;
-        if(timePassed > TIMEOUT){
-            cout << "----------TIME OUT----------" << endl;
-            return false;
-        }
-
-        if(exploredBFS > MAXEXPLORED){
-            cout << "----------TOO MANY NODES EXPLORED!----------" << endl;
-            return false;
-        }
 
         if(u == goal){
             cout << "-----SOLUTION-----" << endl;
             cout << u.path;
 			cout << "REACHED GOAL  : \n" + u.toString() <<endl;
 			cout << "Path Length   : " << u.g << endl;
-
-			return true;
+            return true;
         }
 
         for(int i = 0;i < 4;i++){
             if( u.canMove(moves[i].first) ){
-                State v = u.move(moves[i].first,moves[i].second,0);
+
+                State v = u.move( moves[i].first,//move description
+                                  moves[i].second,//move name
+                                  heuristic//heuristic function
+                                 );
+
                 if(!visited[v]){
-                    visited[v] = true;
-                    exploredBFS++;
-                    q.push(v);
+                    //visited[v] = true;
+                    pq.push(v);
                 }
             }
         }
@@ -64,6 +45,7 @@ bool bfs(State start,State goal){
 
 int main(){
     freopen("in.txt","r",stdin);
+    freopen("out.txt","w",stdout);
 
     int k,x;
     cin >> k;
@@ -84,9 +66,10 @@ int main(){
     State start(a,zero);
 
     if(isSolvable(start))
-        bfs(start,getGoal(n));
+        A_star(start,getGoal(n),MANHATTAN);
     else
         cout << "Not solvabable" << endl;
 
     return 0;
 }
+
