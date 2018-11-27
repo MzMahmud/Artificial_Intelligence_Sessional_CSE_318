@@ -33,24 +33,25 @@ public:
     int f,g,h;
 
     State(matrix _a,pii _zero){
-        this->a    = _a;this->zero = _zero;
-        this->n    = a.size();this->path = "";
-        this->f    = 0;this->g    = 0;this->h    = 0;
+        this->a = _a;      this->zero = _zero;
+        this->n = a.size();this->path = "";
+        this->f = 0;       this->g    = 0;
+        this->h = 0;
     }
 
     State& operator=(const State& other){
-        this->a    = other.a;this->n    = other.n;
-        this->zero = other.zero;this->path = other.path;
-        this->f    = other.f;this->g    = other.g;
+        this->a    = other.a;    this->n    = other.n;
+        this->zero = other.zero; this->path = other.path;
+        this->f    = other.f;    this->g    = other.g;
         this->h    = other.h;
         return *this;
     }
 
     bool canMove(pii offset){
-        int i = zero.first  + offset.first;
-        int j = zero.second + offset.second;
+        int i = this->zero.first  + offset.first;
+        int j = this->zero.second + offset.second;
         //if i crosses the grid its invalid move
-        return !(i < 0 || j < 0 || i >= n || j >= n);
+        return !(i < 0 || j < 0 || i >= this->n || j >= this->n);
     }
 
     State move(pii offset,string moveName,int heuristic){
@@ -61,7 +62,7 @@ public:
         prev_j = ret.zero.second;
          new_i = prev_i + offset.first;
          new_j = prev_j + offset.second;
-        swap(ret.a[prev_i][prev_j],ret.a[new_i][new_j]);
+        swap( ret.a[prev_i][prev_j], ret.a[new_i][new_j] );
         //updates the new position of zero
         ret.zero = make_pair(new_i,new_j);
 
