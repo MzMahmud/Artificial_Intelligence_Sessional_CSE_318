@@ -1,134 +1,90 @@
-#define LEFT  0
-#define RIGHT 1
-#define UP    2
-#define DOWN  3
-#define HAMMING   0
-#define MANHATTAN 1
-#define LINEARCON 2
-
-typedef vector< vector<int> > matrix;
-typedef pair<int,int> pii;
-
-///all possible moves
-pair<pii,string> moves[4] = {
-                                make_pair( make_pair( 0, 1), string("LEFT") ),
-                                make_pair( make_pair( 0,-1), string("RIGHT")),
-                                make_pair( make_pair( 1, 0), string("UP")   ),
-                                make_pair( make_pair(-1, 0), string("DOWN") )
-                            };
-struct State;
-pii getGoalPosition(int,int);
-int hamming(State);
-int manhattan(State);
-int linearConflict(State);
-
+#include "state.h"
 
 ///Class implementation
-class State{
-public:
-    matrix a;
-    int n;
-    pii zero;
-    string path;
-    int f,g,h;
+State::State(matrix _a,pii _zero){
+    this->a = _a;      this->zero = _zero;
+    this->n = a.size();this->path = "";
+    this->f = 0;       this->g    = 0;
+    this->h = 0;
+}
+State& State::operator=(const State& other){
+    this->a    = other.a;    this->n    = other.n;
+    this->zero = other.zero; this->path = other.path;
+    this->f    = other.f;    this->g    = other.g;
+    this->h    = other.h;
+    return *this;
+}
+bool State::canMove(pii offset){
+    int i = this->zero.first  + offset.first;
+    int j = this->zero.second + offset.second;
+    //if i crosses the grid its invalid move
+    return !(i < 0 || j < 0 || i >= this->n || j >= this->n);
+}
+State State::move(pii offset,string moveName,int heuristic){
+    State ret = *this;
+    //performs the move
+    int prev_i,prev_j,new_i,new_j;
+    prev_i = ret.zero.first;
+    prev_j = ret.zero.second;
+     new_i = prev_i + offset.first;
+     new_j = prev_j + offset.second;
+    swap( ret.a[prev_i][prev_j], ret.a[new_i][new_j] );
+    //updates the new position of zero
+    ret.zero = make_pair(new_i,new_j);
 
-    State(matrix _a,pii _zero){
-        this->a = _a;      this->zero = _zero;
-        this->n = a.size();this->path = "";
-        this->f = 0;       this->g    = 0;
-        this->h = 0;
-    }
+    //builds path
+    char ch[100];
+    sprintf(ch,"move %d ",ret.a[prev_i][prev_j]);
+    ret.path = this->path + "State  :\n" + toString()
+                          + "Action : "  + string(ch) + moveName + "\n\n";
 
-    State& operator=(const State& other){
-        this->a    = other.a;    this->n    = other.n;
-        this->zero = other.zero; this->path = other.path;
-        this->f    = other.f;    this->g    = other.g;
-        this->h    = other.h;
-        return *this;
-    }
+    //updates estimated cost f(n) = g(n) + h(n)
+    ret.g = this->g + 1;
+    int heu;
+         if(heuristic == HAMMING)   heu = hamming(ret);
+    else if(heuristic == MANHATTAN) heu = manhattan(ret);
+    else if(heuristic == LINEARCON) heu = linearConflict(ret);
 
-    bool canMove(pii offset){
-        int i = this->zero.first  + offset.first;
-        int j = this->zero.second + offset.second;
-        //if i crosses the grid its invalid move
-        return !(i < 0 || j < 0 || i >= this->n || j >= this->n);
-    }
+    ret.h = heu;
+    ret.f = ret.g + ret.h;
 
-    State move(pii offset,string moveName,int heuristic){
-        State ret = *this;
-        //performs the move
-        int prev_i,prev_j,new_i,new_j;
-        prev_i = ret.zero.first;
-        prev_j = ret.zero.second;
-         new_i = prev_i + offset.first;
-         new_j = prev_j + offset.second;
-        swap( ret.a[prev_i][prev_j], ret.a[new_i][new_j] );
-        //updates the new position of zero
-        ret.zero = make_pair(new_i,new_j);
-
-        //builds path
-        char ch[100];
-        sprintf(ch,"move %d ",ret.a[prev_i][prev_j]);
-        ret.path = this->path + "State  :\n" + toString()
-                              + "Action : "  + string(ch) + moveName + "\n\n";
-
-        //updates estimated cost f(n) = g(n) + h(n)
-        ret.g = this->g + 1;
-        int heu;
-             if(heuristic == HAMMING)   heu = hamming(ret);
-        else if(heuristic == MANHATTAN) heu = manhattan(ret);
-        else if(heuristic == LINEARCON) heu = linearConflict(ret);
-
-        ret.h = heu;
-        ret.f = ret.g + ret.h;
-
-        return ret;
-    }
-
-    string toString(){
-        char s[10000] = "",t[1000];
-        for(int i = 0;i < n;i++){
-            for(int j = 0;j < n;j++){
-                sprintf(t,"%d ",a[i][j]);
-                strcat(s,t);
-            }
-            sprintf(t,"\n");
+    return ret;
+}
+string State::toString(){
+    char s[10000] = "",t[1000];
+    for(int i = 0;i < n;i++){
+        for(int j = 0;j < n;j++){
+            sprintf(t,"%d ",a[i][j]);
             strcat(s,t);
         }
-        return string(s);
+        sprintf(t,"\n");
+        strcat(s,t);
     }
+    return string(s);
+}
+bool State::operator<(const State& other) const {
+    for(int i = 0;i < n;i++)
+        for(int j = 0;j < n;j++)
+            if(this->a[i][j] != other.a[i][j])
+                return this->a[i][j] < other.a[i][j];
 
-    bool operator<(const State& other) const {
-        for(int i = 0;i < n;i++)
-            for(int j = 0;j < n;j++)
-                if(this->a[i][j] != other.a[i][j])
-                    return this->a[i][j] < other.a[i][j];
+    return false;
+}
+bool State::operator==(const State& other){
+    for(int i = 0;i < n;i++)
+        for(int j = 0;j < n;j++)
+            if(this->a[i][j] != other.a[i][j])
+                return false;
 
-        return false;
-    }
-
-    bool operator==(const State& other){
-        for(int i = 0;i < n;i++)
-            for(int j = 0;j < n;j++)
-                if(this->a[i][j] != other.a[i][j])
-                    return false;
-
-        return true;
-    }
-};
-
+    return true;
+}
 
 ///state comparator. Needed for priority_queue
-
-class StateComparator{
-public:
-    bool operator()(const State& a,const State& b)const{
-        // '>' for min heap
-        // '<' for max heap
-        return a.f > b.f;
-    }
-};
-
+bool StateComparator::operator()(const State& a,const State& b)const{
+    // '>' for min heap
+    // '<' for max heap
+    return a.f > b.f;
+}
 
 ///utility functions
 ostream& operator<<(ostream& sout,const State& a){
@@ -139,9 +95,8 @@ ostream& operator<<(ostream& sout,const State& a){
         }
         sout << endl;
     }
-    sout << "n = " << a.n << endl;
-    sout << "zero = (" << a.zero.first << "," << a.zero.second << ")" << endl;
-
+    //sout << "n = " << a.n << endl;
+    //sout << "zero = (" << a.zero.first << "," << a.zero.second << ")" << endl;
     return sout;
 }
 
@@ -197,9 +152,7 @@ pii getGoalPosition(int a,int n){
     return make_pair((a-1)/n,(a-1)%n);
 }
 
-
 ///heuristic functions
-
 int hamming(State state){
     int hamm = 0;
     for(int i = 0;i < state.n;i++){
