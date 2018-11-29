@@ -1,3 +1,6 @@
+#ifndef STATE_H
+#define STATE_H
+
 #include<bits/stdc++.h>
 
 using namespace std;
@@ -45,3 +48,5 @@ int manhattan(State);
 int linearConflict(State);
 State getGoal(int);
 bool isSolvable(State);
+
+#endif
