@@ -1,7 +1,7 @@
 all: final 
 
 final: state.o main.o
-	g++ -c main.o state.o -o missionaries_cannibals.out
+	g++ main.o state.o -o missionaries_cannibals.out
 
 state.o: State.cpp state.h
 	g++ -c State.cpp -o state.o
