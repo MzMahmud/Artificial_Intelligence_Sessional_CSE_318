@@ -1,6 +1,6 @@
 #include "state.h"
 
-#define TIMEOUT 30.0
+#define TIMEOUT 60.0
 #define MAXEXPANDED 1000000
 
 pair<pii,string> moves[4] = {
@@ -74,7 +74,6 @@ bool A_star(State start,State goal,int heuristic){
         }
 
     }
-
     cout << "-----------Full Graph Searched! NO SOLUTION-----------" << endl;
     return false;
 }
@@ -82,7 +81,7 @@ bool A_star(State start,State goal,int heuristic){
 void run(){
     int k,x;
     cin >> k;
-    int n = sqrt(k+1.0);
+    int n = sqrt(k + 1.0);
     matrix a;
     vector<int> b;
     pii zero;
@@ -95,9 +94,8 @@ void run(){
         a.push_back(b);
         b.clear();
     }
-
+	
     State start(a,zero);
-
     if(!isSolvable(start)){
         cout << start << "--------NOT Solvable--------" << endl;
         return;
@@ -109,14 +107,17 @@ void run(){
              if(heu == HAMMING)     printf("----With Hamming Distance------\n");
         else if(heu == MANHATTAN)   printf("----With Manhattan Distance----\n");
         else if(heu == LINEARCON)   printf("----With Linear Conflict-------\n");
-
-        runTime[heu] = (double) clock();
-        ret[heu] = A_star(start,getGoal(n),heu);
-        runTime[heu] = ((double) clock() - runTime[heu])/CLOCKS_PER_SEC;
+		
+		try{
+			runTime[heu] = (double) clock();
+			ret[heu] = A_star(start,getGoal(n),heu);
+			runTime[heu] = ((double) clock() - runTime[heu])/CLOCKS_PER_SEC;
+		}catch(...){
+			ret[heu] = false;
+			cout << "----Bad Allocation!!----" << endl;
+		}
     }
-
-    cout<<endl;
-    printf("*************************Comparison*************************\n");
+    printf("\n*************************Comparison*************************\n");
     printf("%15s%10s%10s%10s%10s\n"," ","Cost","Time","Expanded","Explored");
     if(ret[HAMMING])
     printf("%15s%10d%10lf%10d%10d\n","Hamming",cost[HAMMING],runTime[HAMMING],expanded[HAMMING],explored[HAMMING]);
@@ -125,14 +126,10 @@ void run(){
     if(ret[LINEARCON])
     printf("%15s%10d%10lf%10d%10d\n","Linear Conflict",cost[LINEARCON],runTime[LINEARCON],expanded[LINEARCON],explored[LINEARCON]);
     printf("************************************************************\n");
-
 }
-
 int main(){
     freopen("in.txt","r",stdin);
     freopen("out.txt","w",stdout);
-
     run();
-
     return 0;
 }
