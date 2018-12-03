@@ -4,10 +4,10 @@
 #define MAXEXPANDED 1000000
 
 pair<pii,string> moves[4] = {
-                                make_pair( make_pair( 0, 1), string("LEFT") ),
-                                make_pair( make_pair( 0,-1), string("RIGHT")),
+                                make_pair( make_pair(-1, 0), string("DOWN") ),
                                 make_pair( make_pair( 1, 0), string("UP")   ),
-                                make_pair( make_pair(-1, 0), string("DOWN") )
+                                make_pair( make_pair( 0,-1), string("RIGHT")),
+                                make_pair( make_pair( 0, 1), string("LEFT") )
                             };
 
 //perfonmance measurement
