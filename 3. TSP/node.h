@@ -18,6 +18,7 @@ struct path{
     double calculateCost();
     path& operator=(const path &);
     void print();
+    bool operator<(const path &) const;
 };
 
 double dist(node ,node );

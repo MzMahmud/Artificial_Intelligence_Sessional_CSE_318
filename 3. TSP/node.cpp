@@ -33,6 +33,10 @@ void path::print(){
     }
 }
 
+bool path::operator<(const path &other) const{
+    return this->cost < other.cost;
+}
+
 double dist(node a,node b){
     return sqrt( (a.x-b.x)*(a.x-b.x)
                + (a.y-b.y)*(a.y-b.y) );
