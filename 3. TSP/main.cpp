@@ -1,8 +1,9 @@
 #include "node.h"
 
-#define First_Improvement 1
-#define Best_Improvement 2
+#define FIRST 1
+#define BEST 2
 #define INF 1000000000
+#define EPS 0.0000001
 
 using namespace std;
 
@@ -72,23 +73,26 @@ path two_opt_swap(path current,int i,int k){
     int n = k - i + 1;
     int limit = n/2;
     for(int j = 0;j < limit;j++){
-        //cout << (i+j) << " " << (i+n-j-1) << endl;
         swap(current.nodes[i + j],current.nodes[i + n - j -1]);
     }
     return current;
 }
 
-path two_opt(path current){
+path two_opt(path current,int improvement){
     int n =  ( (int) current.nodes.size() )  - 1;
     double current_best = current.calculateCost();
     for(int i = 1;i < n - 1;i++){
         for (int k = i + 1; k < n; k++) {
             path new_path   = two_opt_swap(current,i,k);
             double new_cost = new_path.calculateCost();
-            //cout << new_cost << endl;
             if(new_cost < current_best){
                 current_best = new_cost;
                 current      = new_path;
+
+                if(improvement == FIRST){
+                    current.calculateCost();
+                    return current;
+                }
             }
         }
     }
@@ -97,36 +101,23 @@ path two_opt(path current){
 }
 
 path improve(path tour,int improvement){
-    if(improvement == First_Improvement)
-        return two_opt(tour);
-
-    int no_imprv_count = 0;
-    double best_cost = tour.calculateCost();
-
-    while(no_imprv_count < 10){
-        tour = two_opt(tour);
-
-        double new_cost = tour.calculateCost();
-        double improvement_factor
-               = abs(best_cost-new_cost)/best_cost*100;
-
-        if(improvement_factor < 10.0)
-            no_imprv_count++;
-        else
-            no_imprv_count = 0;
-
-        best_cost = new_cost;
+    double best_cost   = INF;
+    double diff = abs(tour.calculateCost() - best_cost);
+    while(diff > EPS){//EPS -> epsilon = 0.0000001
+        tour = two_opt(tour,improvement);
+        diff = abs(tour.cost - best_cost);
+        best_cost = tour.cost;
     }
     return tour;
 }
 
 int main(int argc, char const *argv[]) {
-    srand (time(NULL));//seeds time for different rand() value 
-    
-    //freopen("burma14.tsp","r",stdin);
-    //freopen("berlin52.tsp","r",stdin);
-    //freopen("st70.tsp","r",stdin);
-    freopen("pr76.tsp","r",stdin);
+    srand (time(NULL));//seeds time for different rand() value
+
+    //freopen("input/burma14.tsp","r",stdin);
+    //freopen("input/berlin52.tsp","r",stdin);
+    //freopen("input/st70.tsp","r",stdin);
+    freopen("input/pr76.tsp","r",stdin);
 
     int n;
     vector<node> nodes;
@@ -137,12 +128,12 @@ int main(int argc, char const *argv[]) {
         cin >> x >> y;
         nodes.push_back(node(x,y,i + 1));
     }
-    
+
     path p = nearestNeighbour(nodes,11,1);
     p.print();
 
-    p = improve(p,Best_Improvement);
+    p = improve(p,BEST);
     p.print();
-    
+
     return 0;
 }
