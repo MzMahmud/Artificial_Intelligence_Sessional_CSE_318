@@ -23,7 +23,6 @@ int getNextNode(vector<node> nodes,bool visited[],int current,int k){
     for(int i = 0;i < k;i++){
         int next;
         double min_cost = INF;
-
         for(int i = 0; i < n;i++){
             if(i == current || visited[i] || added[i])
                 continue;
@@ -34,7 +33,6 @@ int getNextNode(vector<node> nodes,bool visited[],int current,int k){
                 next = i;
             }
         }
-
         added[next] = true;
         topNeighbours.push_back(next);
     }
@@ -111,17 +109,49 @@ path improve(path tour,int improvement){
     return tour;
 }
 
+int get_next(int u,int depo,int k,int n,double **savings,bool *added){
+    vector<int> neighbours;
+    bool pushed[n] = {};
+    for(int j = 0;j < k;j++){//takes to k neigbhbours
+
+        double best_neighbour = -1;
+        int    best_neighbour_index = -1;
+        for(int i = 0;i < n;i++){
+            if(i == u || i == depo || added[i] || pushed[i] ){
+                continue;
+            }
+            if(savings[u][i] > best_neighbour){
+                best_neighbour = savings[u][i];
+                best_neighbour_index  = i;
+            }
+        }
+        if(best_neighbour_index >= 0){
+            neighbours.push_back(best_neighbour_index);
+            pushed[best_neighbour_index] = true;
+        }
+    }
+    int total = (int) neighbours.size();
+    if(total <= 0) return -1;
+
+    int random = abs(rand()) % total;
+    return neighbours[random];
+}
 
 path savings_heuristic(vector<node> nodes,int depo,int k){
     srand (time(NULL));
 
     int n = nodes.size();
-    double savings[n][n] = {};
+    double **savings;
+    savings = new double*[n];
+    for(int i = 0;i < n;i++)
+        savings[i] = new double[n];
+
     pair<int,int> max_index;
     double max_saving = -1;
     //calculate savings
     for(int i = 0;i < n;i++){
         for(int j = 0;j < n;j++){
+            savings[i][j] = -1;
             if(i == j || i == depo || j == depo){
                 continue;
             }
@@ -137,81 +167,18 @@ path savings_heuristic(vector<node> nodes,int depo,int k){
 
     deque<node> cycle;//adds nodes to cycle
     bool added[n] = {};//nodes already added
-
     //adds max savings to the cycle
     cycle.push_front(nodes[max_index.first]);
     cycle.push_back (nodes[max_index.second]);
     added[max_index.first] = added[max_index.second] = true;
-    int times = 3;
+
     while( (int) cycle.size() < (n-1) ){//n-1 nodes have to be added to cycle
         //choose next nodes to be added to cycle
         int u = cycle.front().index - 1;//-1 because + 1 was added in index
-        int u_next = -420;
-        //selects next of u
-        vector<int> u_neighbours;
-        bool u_pushed[n] = {};
-        for(int j = 0;j < k;j++){//takes to k neigbhbours
+        int u_next = get_next(u,depo,k,n,savings,added);
 
-            double u_best_neighbour = -1;
-            int    u_best_neighbour_index = -1;
-            for(int i = 0;i < n;i++){
-                if(i == u || i == depo || added[i] || u_pushed[i] ){
-                    continue;
-                }
-                if(savings[u][i] > u_best_neighbour){
-                    u_best_neighbour = savings[u][i];
-                    u_best_neighbour_index  = i;
-                }
-            }
-            if(u_best_neighbour_index >= 0){
-                u_neighbours.push_back(u_best_neighbour_index);
-                u_pushed[u_best_neighbour_index] = true;
-            }
-        }
-        int u_total = (int) u_neighbours.size();
-        if(u_total > 0){
-            int u_random = abs(rand()) % u_total;
-            u_next =  u_neighbours[u_random];
-        }else{
-            u_next = -1;
-        }
-
-        //***************************FOR v*******************************
         int v = cycle.back().index - 1;//-1 because + 1 was added in index
-        int v_next = -420;
-        vector<int> v_neighbours;
-        bool v_pushed[n] = {};
-
-        for(int j = 0;j < k;j++){//takes to k neigbhbours
-
-            double v_best_neighbour = -1;
-            int    v_best_neighbour_index = -1;
-            for(int i = 0;i < n;i++){
-                if(i == v || i == depo || added[i] || v_pushed[i] ){
-                    continue;
-                }
-                if(savings[v][i] > v_best_neighbour){
-                    v_best_neighbour = savings[v][i];
-                    v_best_neighbour_index  = i;
-                }
-            }
-
-            if(v_best_neighbour_index >= 0){
-                v_neighbours.push_back(v_best_neighbour_index);
-                v_pushed[v_best_neighbour_index] = true;
-            }
-        }
-
-        int v_total = (int) v_neighbours.size();
-        if(v_total > 0){
-            int v_random = abs(rand()) % v_total;
-            v_next =  u_neighbours[v_random];
-        }else{
-            v_next = -1;
-        }
-        //cout << "v_next  " << v_next << endl;
-
-        //**********************************************************************
+        int v_next = get_next(v,depo,k,n,savings,added);
 
         //adds node to cycle
         if(u_next >= 0 && v_next >= 0){
@@ -243,7 +210,6 @@ path savings_heuristic(vector<node> nodes,int depo,int k){
         }if(u_next < 0 && v_next < 0){
             break;
         }
-
     }
 
     cycle.push_front(nodes[depo]);
@@ -254,6 +220,11 @@ path savings_heuristic(vector<node> nodes,int depo,int k){
     for(it = cycle.begin();it != cycle.end();it++){
         tour.nodes.push_back(*it);
     }
+
+    //release memory of savings
+    for(int i = 0;i < n;i++)
+        delete [] savings[i];
+    delete savings;
 
     tour.calculateCost();
     return tour;
@@ -296,20 +267,11 @@ void run(const char *file_name){
     }
 
     sort(nnh_path.begin(),nnh_path.end());
-    // for(int i = 0;i < nnh_path.size();i++){
-    //     nnh_path[i].print();
-    // }
-    // cout << endl;
-
     sort(sh_path.begin(),sh_path.end());
-    // for(int i = 0;i < sh_path.size();i++){
-    //     sh_path[i].print();
-    // }
-    // cout << endl;
-    double nnh_avg = 0;
-    double  sh_avg = 0;
 
     //AVERAGE CASE
+    double nnh_avg = 0;
+    double  sh_avg = 0;
     vector<double> stat;
     for(int i = 0;i < k;i++){
         nnh_avg += nnh_path[i].cost;
@@ -317,7 +279,6 @@ void run(const char *file_name){
     }
     stat.push_back(nnh_avg/k);
     stat.push_back( sh_avg/k);
-
     //BEST CASE
     stat.push_back(nnh_path[0].cost);
     stat.push_back( sh_path[0].cost);
@@ -429,13 +390,12 @@ void run(const char *file_name){
 int main(int argc, char const *argv[]) {
     srand (time(NULL));//seeds time for different rand() value
 
-    //freopen("input/berlin52.tsp","r",stdin);
-    //freopen("input/st70.tsp","r",stdin);
-    //freopen("input/pr76.tsp","r",stdin);
-
     //TODO: Taks 1
-    string file_name[3] = { "pr76","berlin52","st70"};
-    for(int i = 0; i < 3;i++){
+    int input_files = 3;
+    string file_name[input_files]    = { "pr76"  ,"berlin52","st70"};
+    double optimal_cost[input_files] = { 108159.0,    7542.0, 675.0};
+
+    for(int i = 0; i < input_files;i++){
         string name = string("input/") + file_name[i] + string(".tsp");
         run(name.c_str());
     }
@@ -451,6 +411,7 @@ int main(int argc, char const *argv[]) {
         cout << endl;
     }
 
+    //TODO: Task 2
     printf("\n\n\t\tGREEDY RANDOM RESULT\n");
     printf("%10s\t%10s\t%10s\t%10s\t%10s\t%10s\t%10s\n",
            "INPUT","NNH AVG","SH AVG","NNH BEST","SH BEST","NNH WORST","SH WORST");
@@ -462,6 +423,7 @@ int main(int argc, char const *argv[]) {
         cout << endl;
     }
 
+    //TODO: Task 3
     printf("\n\n\t\tThe 2-opt results for best improvement\n");
     printf("%10s\t%10s\t%10s\t%10s\t%10s\t%10s\t%10s\n",
            "INPUT","NNH AVG","SH AVG","NNH BEST","SH BEST","NNH WORST","SH WORST");
@@ -485,40 +447,20 @@ int main(int argc, char const *argv[]) {
     }
 
     //TODO: optimal with best and first
-    vector<double> stat_final;
-    //first input file
-    stat_final.push_back(108159);stat_final.push_back(100);
-    stat_final.push_back(task_best[0][2]/108159.0*100);
-    stat_final.push_back(task_best[0][3]/108159.0*100);
-    stat_final.push_back(task_first[0][2]/108159.0*100);
-    stat_final.push_back(task_first[0][3]/108159.0*100);
+    for(int i = 0;i < input_files;i++){
+        vector<double> stat_final;
+        stat_final.push_back(optimal_cost[i]);stat_final.push_back(100);
+        stat_final.push_back(task_best[i][2]/optimal_cost[i]*100);
+        stat_final.push_back(task_best[i][3]/optimal_cost[i]*100);
+        stat_final.push_back(task_first[i][2]/optimal_cost[i]*100);
+        stat_final.push_back(task_first[i][3]/optimal_cost[i]*100);
 
-    task_final.push_back(stat_final);
-    stat_final.clear();
-
-    //second input file
-    stat_final.push_back(7542);stat_final.push_back(100);
-    stat_final.push_back(task_best[1][2]/7542.0*100);
-    stat_final.push_back(task_best[1][3]/7542.0*100);
-    stat_final.push_back(task_first[1][2]/7542.0*100);
-    stat_final.push_back(task_first[1][3]/7542.0*100);
-
-    task_final.push_back(stat_final);
-    stat_final.clear();
-
-    //third input file
-    stat_final.push_back(675);stat_final.push_back(100);
-    stat_final.push_back(task_best[2][2]/675.0*100);
-    stat_final.push_back(task_best[2][3]/675.0*100);
-    stat_final.push_back(task_first[2][2]/675.0*100);
-    stat_final.push_back(task_first[2][3]/675.0*100);
-
-    task_final.push_back(stat_final);
-    stat_final.clear();
+        task_final.push_back(stat_final);
+    }
 
     printf("\n\n\t\tPerformance Comparison\n");
     printf("%10s\t%10s\t%10s\t%10s\t%10s\t%10s\t%10s\n",
-           "INPUT","ACTUAL","%%","NNH BEST %%","SH BEST %%","NNH FISRT %%","SH FISRT %%");
+           "INPUT","ACTUAL","%%","NNH BEST%%","SH BEST%%","NNH FISRT%%","SH FISRT%%");
     for(int i = 0; i < task_final.size();i++){
         printf("%10s\t",file_name[i].c_str());
         for(int j = 0;j < task_final[i].size();j++){
@@ -526,8 +468,6 @@ int main(int argc, char const *argv[]) {
         }
         cout << endl;
     }
-
-
 
     return 0;
 }
