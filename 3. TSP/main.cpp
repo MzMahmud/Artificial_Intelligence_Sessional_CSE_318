@@ -21,7 +21,7 @@ int getNextNode(vector<node> nodes,bool visited[],int current,int k){
     bool added[n] = {};//already added in topNeighbours
 
     for(int i = 0;i < k;i++){
-        int next;
+        int next = -1;
         double min_cost = INF;
         for(int i = 0; i < n;i++){
             if(i == current || visited[i] || added[i])
@@ -33,10 +33,15 @@ int getNextNode(vector<node> nodes,bool visited[],int current,int k){
                 next = i;
             }
         }
-        added[next] = true;
-        topNeighbours.push_back(next);
+		if(next >= 0){
+			added[next] = true;
+			topNeighbours.push_back(next);
+		}
     }
     k = (int) topNeighbours.size();
+
+	if(k <= 0) return -1;//if no neighbours to pick return -1
+	
     int random = abs(rand()) % k;//selects a random integer in [0,k]
     int next   = topNeighbours[random];//randomly selects a top neighbour as next
     return next;
@@ -61,6 +66,7 @@ path nearestNeighbour(vector<node> nodes,int start,int k){
         count++;
 
         current = getNextNode(nodes,visited,current,k);
+		if(current < 0) break;
     }
     tour.nodes.push_back(nodes[start]);
     tour.calculateCost();
@@ -174,10 +180,10 @@ path savings_heuristic(vector<node> nodes,int depo,int k){
 
     while( (int) cycle.size() < (n-1) ){//n-1 nodes have to be added to cycle
         //choose next nodes to be added to cycle
-        int u = cycle.front().index - 1;//-1 because + 1 was added in index
+        int u = cycle.front().index;
         int u_next = get_next(u,depo,k,n,savings,added);
 
-        int v = cycle.back().index - 1;//-1 because + 1 was added in index
+        int v = cycle.back().index;
         int v_next = get_next(v,depo,k,n,savings,added);
 
         //adds node to cycle
@@ -245,8 +251,9 @@ void run(const char *file_name){
     for(int i = 0;i < n;i++){
         double x,y;
         fin >> x >> y;
-        nodes.push_back(node(x,y,i + 1));
+        nodes.push_back(node(x,y,i));
     }
+    fin.close();
 
     ///TODO: pick k = 5 statring nodes
     int k = 5;
@@ -261,7 +268,6 @@ void run(const char *file_name){
     }
     vector<path> nnh_path,sh_path;
     for(int i = 0;i < starts.size();i++){
-        //cout << starts[i] << " ";
         nnh_path.push_back(nearestNeighbour(nodes,starts[i],1));
          sh_path.push_back(savings_heuristic(nodes,starts[i],1));
     }
@@ -290,7 +296,7 @@ void run(const char *file_name){
     task_1.push_back(stat);
 
     //TODO: Task 2
-    int best_start = nnh_path[0].nodes[0].index - 1;
+    int best_start = nnh_path[0].nodes[0].index;
     int run_count = 10;
     int top_count = 5;
     vector<path> nnh_rand,sh_rand;
