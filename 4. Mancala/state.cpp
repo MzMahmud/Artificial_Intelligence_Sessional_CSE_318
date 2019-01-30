@@ -63,13 +63,14 @@ int state::declare_winner(int empty_player){
     int non_empty_player
         = (empty_player == PLAYER_A)?(PLAYER_B):(PLAYER_A);
 
-    int stones = 0;
+    int captured_stones = 0;
     for(int i = 0;i < 6;i++){
-        stones += this->holes[non_empty_player + i];
+        captured_stones += this->holes[non_empty_player + i];
+        this->holes[non_empty_player + i] = 0;
     }
 
     int store = (non_empty_player == PLAYER_A)?(A_STORE):(B_STORE);
-    this->holes[store] += stones;
+    this->holes[store] += captured_stones;
 
     if(this->holes[A_STORE] == this->holes[B_STORE])
         return -1;//DRAW
@@ -135,19 +136,21 @@ state state::move_from(int hole){
 
     if( me <= index && index <= (me+5) && new_state.holes[index] == 1 ){
         //last piece in my holes
-        new_state.holes[index]--;
-        new_state.holes[my_store]++;
-
         int opposite_hole = 12 - index;
-        new_state.holes[my_store] += new_state.holes[opposite_hole];
+        if(new_state.holes[opposite_hole]){
+            new_state.holes[index]--;//takes the last stone
+            new_state.holes[my_store]++;//put it in my store
 
-        if(me == PLAYER_A){
-            new_state.a_captured += new_state.holes[opposite_hole];
-        }else if(me == PLAYER_B){
-            new_state.b_captured += new_state.holes[opposite_hole];
+            //put all the stone of opposite hole in my store
+            new_state.holes[my_store] += new_state.holes[opposite_hole];
+
+            if(me == PLAYER_A)
+                new_state.a_captured += new_state.holes[opposite_hole];
+            else if(me == PLAYER_B)
+                new_state.b_captured += new_state.holes[opposite_hole];
+
+            new_state.holes[opposite_hole] = 0;
         }
-
-        new_state.holes[opposite_hole] = 0;
     }
 
     return new_state;
@@ -157,41 +160,33 @@ state state::move_from(int hole){
 //heuristic calculation
 int del_storage(state& a){
     //stones_in_my_storage – stones_in_opponents_storage
-    int me = (a.turn == PLAYER_A)?(PLAYER_A):(PLAYER_B);
-    int op = (a.turn == PLAYER_A)?(PLAYER_B):(PLAYER_A);
-    int my_store = (me == PLAYER_A)?(A_STORE):(B_STORE);
-    int op_store = (me == PLAYER_A)?(B_STORE):(A_STORE);
-
-    return a.holes[my_store] - a.holes[op_store];
+    return a.holes[A_STORE] - a.holes[B_STORE];
 }
 
 int del_stones(state& a){
     //(stones_on_my_side – stones_on_opponents_side)
-    int me = (a.turn == PLAYER_A)?(PLAYER_A):(PLAYER_B);
-    int op = (a.turn == PLAYER_A)?(PLAYER_B):(PLAYER_A);
-
-    int me_stones = 0;
+    int a_stones = 0;
     for(int i = 0;i < 6;i++){
-        me_stones += a.holes[me + i];
-    }//counts total #stones in my holes
+        a_stones += a.holes[PLAYER_A + i];
+    }//counts total #stones in A's holes
 
-    int op_stones = 0;
+    int b_stones = 0;
     for(int i = 0;i < 6;i++){
-        op_stones += a.holes[op + i];
-    }//counts total #stones in op's holes
+        b_stones += a.holes[PLAYER_B + i];
+    }//counts total #stones in B's holes
 
-    return (me_stones - op_stones);
+    return (a_stones - b_stones);
 }
 
 int move_earned(state& a){
     //(additional_move_earned)
-    int me_move_earned = (a.turn == PLAYER_A)?(a.a_move_earned):(a.b_move_earned);
+    int me_move_earned = (a.turn == PLAYER_A)?(a.a_move_earned):(-a.b_move_earned);
     return (me_move_earned);
 }
 
 int captured(state& a){
     //(stones_captured)
-    int me_captured = (a.turn == PLAYER_A)?(a.a_captured):(a.b_captured);
+    int me_captured = (a.turn == PLAYER_A)?(a.a_captured):(-a.b_captured);
     return (me_captured);
 }
 
