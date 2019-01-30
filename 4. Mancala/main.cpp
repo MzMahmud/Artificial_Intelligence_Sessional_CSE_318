@@ -67,7 +67,7 @@ void play_with_other(int player,int (*heuristic_a)(state&),int (*heuristic_b)(st
     while(game_state.is_game_over() < 0){
         game_state.print();
 
-        if(game_state.turn == PLAYER_A){
+        if(game_state.turn == player){
             cout << "*****YOUR MOVE*****" << endl;
 
             int opt_move = minimax(game_state,
