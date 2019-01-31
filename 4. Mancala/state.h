@@ -20,7 +20,7 @@ struct state{
     int (*heuristic_b)(state& );//heuristic function for B
 
     state();//constructor
-    
+
     state(int (*heuristic_1)(state& ),
           int (*heuristic_2)(state& ));//constructor with both heuristics different
 
@@ -32,15 +32,17 @@ struct state{
     void print();
 };
 
+
+//weights defined in heuristic calculation
+#define W1 30 //(stones_in_my_storage – stones_in_opponents_storage
+#define W2 15 //(stones_on_my_side – stones_on_opponents_side)
+#define W3 25 //(additional_move_earned)
+#define W4 20 //(stones_captured)
+
 //heuristics
 int heuristic_1(state& a);
 int heuristic_2(state& a);
 int heuristic_3(state& a);
 int heuristic_4(state& a);
-//weights defined in heuristic calculation
-#define W1 10 //(stones_in_my_storage – stones_in_opponents_storage
-#define W2 9 //(stones_on_my_side – stones_on_opponents_side)
-#define W3 12 //(additional_move_earned)
-#define W4 12 //(stones_captured)
 
 #endif

@@ -79,7 +79,7 @@ int state::declare_winner(int empty_player){
 }
 
 void state::print(){
-    printf("*******************************************\n");
+    printf("-------------------------------------------\n");
     printf("%5s"," ");
     for(int i = 5;i >= 0;i--){
         printf("%5d",this->holes[PLAYER_B + i]);
@@ -97,7 +97,7 @@ void state::print(){
         printf("%5d",this->holes[PLAYER_A + i]);
     }
     printf("%5s\n"," ");
-    printf("*******************************************\n\n");
+    printf("-------------------------------------------\n");
 
 }
 
@@ -180,18 +180,23 @@ int del_stones(state& a){
 
 int move_earned(state& a){
     //(additional_move_earned)
-    int me_move_earned = (a.turn == PLAYER_A)?(a.a_move_earned):(-a.b_move_earned);
-    return (me_move_earned);
+    // int me_move_earned = (a.turn == PLAYER_A)?(a.a_move_earned-a.b_move_earned):(a.a_move_earned-a.b_move_earned);
+    // return (me_move_earned);
+
+    return (a.a_move_earned - a.b_move_earned);
 }
 
 int captured(state& a){
     //(stones_captured)
-    int me_captured = (a.turn == PLAYER_A)?(a.a_captured):(-a.b_captured);
-    return (me_captured);
+    // int me_captured = (a.turn == PLAYER_A)?(a.a_captured-a.b_captured):(a.a_captured-a.b_captured);
+    // return (me_captured);
+
+    return (a.a_captured - a.b_captured);
 }
 
 //heuristic functions
 int heuristic_1(state& a){
+    //cout << "heuristic_1()" << endl;
     //stones_in_my_storage – stones_in_opponents_storage
     return del_storage(a);
 }
@@ -201,6 +206,7 @@ int heuristic_2(state& a){
         W1 * (stones_in_my_storage – stones_in_opponents_storage)
       + W2 * (stones_on_my_side – stones_on_opponents_side)
     */
+    //cout << "heuristic_2()" << endl;
     return W1*del_storage(a)
          + W2*del_stones(a);
 }
@@ -211,6 +217,7 @@ int heuristic_3(state& a){
       + W2 * (stones_on_my_side – stones_on_opponents_side)
       + W3 * (additional_move_earned)
     */
+    //cout << "heuristic_3()" << endl;
     return W1*del_storage(a)
          + W2*del_stones(a)
          + W3*move_earned(a);
@@ -223,6 +230,7 @@ int heuristic_4(state& a){
       + W3 * (additional_move_earned)
       + W4 * (stones_captured)
     */
+    //cout << "heuristic_4()" << endl;
     return W1*del_storage(a)
          + W2*del_stones(a)
          + W3*move_earned(a)
