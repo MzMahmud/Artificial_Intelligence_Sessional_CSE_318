@@ -19,7 +19,7 @@ We compared performance of different heuristics:
 
 Traveling Salesperson Problem
 -----------------------------
-In this assignment, I implemented The **Nearest Neighbour Heuristic(NNH)** and **Savings Heuristic (SH)** which are constructive algorithms. Also, improved the attained solution by NNH and SH by **$k$-opt iterative improvement algorithm**(for $k = 2$).to solve the NP-complete problem **Traveling Salesperson Problem**. 
+In this assignment, I implemented The **Nearest Neighbour Heuristic(NNH)** and **Savings Heuristic (SH)** which are constructive algorithms. Also, improved the attained solution by NNH and SH by **k-opt iterative improvement algorithm**(for k = 2).to solve the NP-complete problem **Traveling Salesperson Problem**. 
 
 Mancala
 -------
