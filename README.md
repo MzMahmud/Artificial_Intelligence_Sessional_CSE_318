@@ -7,11 +7,11 @@ We were given 4 assignments on different topics.
 
 The missionaries and cannibals problem
 -----------------------------------------
-In this assignment, I solved the general version of famous **Missionaries and Cannibals Problem** with $m$ missionaries,$c$ cannibals and boat capacity $k$ using Search Breadth First Search(**BFS**) and Depth First Search(**DFS**) and compared their performance.
+In this assignment, I solved the general version of famous **Missionaries and Cannibals Problem** with **m** missionaries,**c** cannibals and boat capacity **k** using Search Breadth First Search(**BFS**) and Depth First Search(**DFS**) and compared their performance.
 
-$n$-Puzzle
+n-Puzzle
 --------
-In this assignment, I solved the general version of a famous game 8-puzzle, $n$-puzzle with **A\* search algorithm**.
+In this assignment, I solved the general version of a famous game 8-puzzle, n-puzzle with **A\* search algorithm**.
 We compared performance of different heuristics:
 * Hamming distance
 * Manhattan distance
